@@ -18,7 +18,6 @@ Clona el repositorio: git clone https://github.com/tu-usuario/tu-proyecto.git
 
 ## Instala las dependencias: npm install
 Configura las variables de entorno, como la URL de la base de datos y la clave secreta para JWT.
-Uso
 ## Inicia el servidor: npm start
 Accede al sistema a través de tu navegador web en http://localhost:3000
 
