@@ -81,7 +81,7 @@ router.get('/costo_alquiler/:id', async (req, res) => {
         const db = client.db('AlquilerAutos');
         const alquilerCollection = db.collection('alquiler');
         
-        const idAlquiler = parseInt(req.params.id); // Convertir el parámetro a entero
+        const idAlquiler = parseInt(req.params.id);
 
         const result = await alquilerCollection.findOne({ id_alquiler: idAlquiler });
 
@@ -97,5 +97,67 @@ router.get('/costo_alquiler/:id', async (req, res) => {
     }
 });
 
+//** 11.Obtener los detalles del alquiler que tiene fecha de inicio en'2023-07-05'.
+router.get('/detalle_alquiler_por_fecha', async (req, res) => {
+    try {
+        const client = new MongoClient(bases);
+        await client.connect();
+        console.log('Connect to Database');
+        const db = client.db('AlquilerAutos');
+        const alquilerCollection = db.collection('alquiler');
+        
+        const fechaInicio = new Date('2023-07-05');
+
+        const result = await alquilerCollection.findOne({ fecha_inicio: fechaInicio });
+
+        if (result) {
+            res.json(result);
+        } else {
+            res.status(404).json({ error: "Alquiler no encontrado" });
+        }
+        client.close();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ** 17.Obtener la cantidad total de alquileres registrados en la base de datos.
+router.get('/cantidad_total_alquileres', async (req, res) => {
+    try {
+        const client = new MongoClient(bases);
+        await client.connect();
+        console.log('Connect to Database');
+        const db = client.db('AlquilerAutos');
+        const alquilerCollection = db.collection('alquiler');
+        
+        const totalAlquileres = await alquilerCollection.countDocuments();
+
+        res.json({ total_alquileres: totalAlquileres });
+        client.close();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ** 20.Listar los alquileres con fecha de inicio entre'2023-07-05'y'2023-07-10'.
+router.get('/alquileres_entre_fechas', async (req, res) => {
+    try {
+        const client = new MongoClient(bases);
+        await client.connect();
+        console.log('Connect to Database');
+        const db = client.db('AlquilerAutos');
+        const alquilerCollection = db.collection('alquiler');
+        
+        const fechaInicioMin = new Date('2023-07-05');
+        const fechaInicioMax = new Date('2023-07-10');
+
+        const result = await alquilerCollection.find({ fecha_inicio: { $gte: fechaInicioMin, $lte: fechaInicioMax } }).toArray();
+        res.json(result);
+        client.close();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 module.exports = router

@@ -65,7 +65,6 @@ function verificarToken(req, res, next) {
         res.status(400).json({ message: 'Token inválido.' });
     }
 }
-
 router.get('/clientes_por_dni/:dni', verificarToken, async (req, res) => {
     try {
         const client = new MongoClient(bases);
@@ -86,6 +85,47 @@ router.get('/clientes_por_dni/:dni', verificarToken, async (req, res) => {
 });
 
 
+// **12.Listar las reservas pendientes realizadas por un cliente específico.
+router.get('/reservas_pendientes_por_cliente/:idCliente', async (req, res) => {
+    try {
+        const client = new MongoClient(bases);
+        await client.connect();
+        console.log('Connect to Database');
+        const db = client.db('AlquilerAutos');
+        const reservaCollection = db.collection('reserva');
+        
+        const idCliente = req.params.idCliente;
 
+        const result = await reservaCollection.find({ id_Cliente: idCliente, estado: 'pendiente' }).toArray();
+
+        res.json(result);
+        client.close();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
+// **14.Obtener los datos de los clientes que realizaron al menos un alquiler.
+router.get('/clientes_con_alquileres', async (req, res) => {
+    try {
+        const client = new MongoClient(bases);
+        await client.connect();
+        console.log('Connect to Database');
+        const db = client.db('AlquilerAutos');
+        const clienteCollection = db.collection('cliente');
+        const alquilerCollection = db.collection('alquiler');
+
+        const clientesConAlquileres = await alquilerCollection.distinct('id_Cliente');
+        
+        const result = await clienteCollection.find({ id_Cliente: { $in: clientesConAlquileres } }).toArray();
+
+        res.json(result);
+        client.close();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 module.exports = router;

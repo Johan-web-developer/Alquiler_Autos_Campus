@@ -71,6 +71,38 @@ router.get('/reservas_pendientes', async (req, res) => {
     }
 });
 
+// **19.Obtener los datos del cliente que realizó la reserva
+router.get('/datos_cliente_reserva/:idReserva', async (req, res) => {
+    try {
+        const client = new MongoClient(bases);
+        await client.connect();
+        console.log('Connect to Database');
+        const db = client.db('AlquilerAutos');
+        const reservaCollection = db.collection('reserva');
+        const clienteCollection = db.collection('cliente');
+
+        const idReserva = req.params.idReserva;
+
+        const reserva = await reservaCollection.findOne({ id_Reserva: idReserva });
+
+        if (!reserva) {
+            return res.status(404).json({ error: "Reserva no encontrada" });
+        }
+
+        const idCliente = reserva.id_Cliente;
+
+        const cliente = await clienteCollection.findOne({ id_Cliente: idCliente });
+
+        if (!cliente) {
+            return res.status(404).json({ error: "Cliente no encontrado" });
+        }
+
+        res.json(cliente);
+        client.close();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 
 module.exports = router;
