@@ -3,9 +3,9 @@ const { MongoClient } = require('mongodb');
 const express = require('express');
 const router = express.Router();
 const bases = process.env.DBBD;
-require('dotenv').config()
+require('dotenv').config();
 
-// ** 2. Obtener todos lo sautomóviles disponibles para alquiler.
+// ** 2. Obtener todos los automóviles disponibles para alquiler.
 router.get('/todos_los_automoviles', async (req,res)=>{
     try {
         const client = new MongoClient(bases);

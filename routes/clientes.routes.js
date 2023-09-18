@@ -3,54 +3,47 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const bases = process.env.DBBD;
+const claveSecreta = 'campus';
 require('dotenv').config()
 
 
 // ** 1.Mostrar todos los clientes registrados en la base de datos
-router.get('/todos_los_automoviles', async (req, res) => {
+router.get('/todos_los_clientes', verificarToken,async (req, res) => {
+    // Middleware de verificación de token
+
     try {
         const client = new MongoClient(bases);
         await client.connect();
         console.log('Connect to Database');
         const db = client.db('AlquilerAutos');
-        const sucursalAutomovilCollection = db.collection('sucursal_automovil');
-        const automovilCollection = db.collection('automovil');
+        const clienteCollection = db.collection('cliente');
         
-        const result = await sucursalAutomovilCollection.aggregate([
-            {
-                $match: { "Cantidad_Disponible": { $gt: 0 } }
-            },
-            {
-                $lookup: {
-                    from: "automovil",
-                    localField: "id_Automovil",
-                    foreignField: "id_Automovil",
-                    as: "automovil_info"
-                }
-            },
-            {
-                $unwind: "$automovil_info"
-            },
-            {
-                $project: {
-                    _id: 0,
-                    nombre: "$automovil_info.nombre",
-                    marca: "$automovil_info.marca",
-                    modelo: "$automovil_info.modelo",
-                    anio: "$automovil_info.anio",
-                    tipo: "$automovil_info.tipo",
-                    Capacidad: "$automovil_info.Capacidad",
-                    Precio_Diario: "$automovil_info.Precio_Diario",
-                    Cantidad_Disponible: 1
-                }
-            }
-        ]).toArray();
-        res.json(result);
+        const result = await clienteCollection.find({}).toArray();
+
+        // Generar un token
+        const token = jwt.sign({}, claveSecreta, { expiresIn: '1h' });
+
+        // Enviar el token junto con los datos
+        res.json( {result, token} );
+
         client.close();
     } catch (error) {
         res.status(404);
     }
 });
+
+function verificarToken(req, res, next) {
+    const token = req.header('Authorization');
+    if (!token) return res.status(401).json({ message: 'Acceso denegado. Token no proporcionado.' });
+
+    try {
+        const decoded = jwt.verify(token, 'secreto'); // Verifica el token usando la clave secreta
+        req.user = decoded; // Almacena la información del usuario en el objeto de solicitud
+        next(); // Continúa con la siguiente función en la ruta
+    } catch (ex) {
+        res.status(400).json({ message: 'Token inválido.' });
+    }
+}
 
 // ** 9.Listar los clientes con el DNI específico.
 function verificarToken(req, res, next) {
